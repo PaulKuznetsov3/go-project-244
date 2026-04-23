@@ -1,7 +1,7 @@
 name: Go Tests
 
 on:
-   push:
+  push:
     branches:
       - '**'
     tags:
@@ -13,7 +13,8 @@ jobs:
 
     strategy:
       matrix:
-        go-version: ['1.26']
+        go-version: ['1.21', '1.22', '1.23']  # 1.26 еще не существует, используйте стабильные версии
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,23 +28,52 @@ jobs:
         with:
           path: |
             ~/go/pkg/mod
-            /go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Run tests
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests with coverage
         run: |
-          # go test ./... запускает тесты во всех подпакетах
-          # -race включает детектор состояния гонки (race condition)
-          # -cover включает проверку покрытия кода тестами
-          go test -race -cover ./...
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+          go test -race -coverprofile=coverage.out -covermode=atomic ./...
+          go test -json > test-report.json
+
+      - name: Upload coverage to Codecov (optional)
+        uses: codecov/codecov-action@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          file: ./coverage.out
+          fail_ci_if_error: false
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+    needs: test  # Ждем завершения тестов
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Важно для SonarCloud
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run tests with coverage for Sonar
+        run: |
+          go test -coverprofile=coverage.out -covermode=atomic ./...
+          go test -json > test-report.json
+
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
-        continue-on-error: true
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.go.tests.reportPaths=test-report.json
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*_test.go,**/vendor/**
