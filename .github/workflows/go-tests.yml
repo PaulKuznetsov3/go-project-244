@@ -1,6 +1,5 @@
 name: Go Tests and SonarCloud
 
-
 on:
   push:
     branches: ["**"]
@@ -15,10 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      HAS_SONAR:   ${{ secrets.SONAR_TOKEN }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,13 +25,10 @@ jobs:
         with:
           go-version: "1.22.x"
           check-latest: true
-          # встраиваемый кеш без 'tar' шумов
           cache: true
           cache-dependency-path: |
             go.sum
             **/go.sum
-
-      # ---- Больше не нужен отдельный actions/cache шаг ----
 
       - name: Go tidy (check)
         run: |
@@ -56,22 +48,36 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Test
-        run: make test
+      - name: Test with coverage
+        run: |
+          make test
+          go test -race -coverprofile=coverage.out -covermode=atomic ./...
 
-      - name: Coverage (artifact)
-        run: make cover && cp coverage.out coverage.txt
+      - name: Generate coverage report
+        run: |
+          go tool cover -func=coverage.out > coverage.txt
+          go tool cover -html=coverage.out -o coverage.html
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage.txt
-          path: coverage.txt
+          name: coverage
+          path: |
+            coverage.txt
+            coverage.html
+            coverage.out
 
       - name: SonarCloud Scan
-        if: ${{ env.HAS_SONAR != '' }}
-        uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
+        if: env.SONAR_TOKEN != ''  # Исправлено условие
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-        continue-on-error: true
+        with:
+          args: >
+            -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.go.tests.reportPaths=coverage.out
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*_test.go,**/vendor/**,**/mocks/**
