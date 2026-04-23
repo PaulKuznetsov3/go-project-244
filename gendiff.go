@@ -14,8 +14,8 @@ import (
 * fopmat Формат вывода результата сравнения файлов.
 */
 func GenDiff(filepath1, filepath2, format string) (string, error){
-	if filepath1 == "" || filepath2 == "" || format == "" {
-		return "", fmt.Errorf("Введите путь")
+	if filepath1 == "" || filepath2 == "" {
+	    return "", fmt.Errorf("file paths cannot be empty: %q, %q", filepath1, filepath2)
 	}
 
 	data1, err1 := code.Parser(filepath1)

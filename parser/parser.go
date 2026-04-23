@@ -19,14 +19,14 @@ func Parser(path string)(map[string]any, error) {
 	if !filepath.IsAbs(path) {
         absFilePath, err := filepath.Abs(path)
 		if err != nil {
-			return nil, fmt.Errorf("Ошибка преобразования пути")
+			return nil, fmt.Errorf("failed to convert path to absolute: %w", err)
 		}
         path = absFilePath
     }
 
 	data, err := os.ReadFile(path)
 	if err != nil {
-	   	return nil, fmt.Errorf("Ошибка чтения файла")
+	   	return nil, fmt.Errorf("file reading error %s: %w", path, err)
 	}
 
 	ext := strings.ToLower(filepath.Ext(path))
