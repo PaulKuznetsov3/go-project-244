@@ -3,6 +3,8 @@ package code
 import (
     "fmt"
 	"code/parser"
+	"code/formatter"
+	"code/compareFiles"
 )
 
 /**
@@ -16,12 +18,23 @@ func GenDiff(filepath1, filepath2, format string) (string, error){
 		return "", fmt.Errorf("Введите путь")
 	}
 
-	data1, err := code.Parser(filepath1)
-	data2, err := code.Parser(filepath2)
+	data1, err1 := code.Parser(filepath1)
+	data2, err2 := code.Parser(filepath2)
 
-	if err != nil {
-		return  "", err
+	if err1 != nil || err2 != nil {
+    	if err1 != nil {
+       		return "", err1
+    	}
+    	return "", err2
 	}
 
-	return  fmt.Sprint(data1, data2, format), nil
+	diff :=	comparefiles.CompareFiles(data1, data2)
+
+	result, err := formatter.GetFormatter(diff, format)
+
+	if err != nil {
+		return "", err
+	}
+
+	return  result, nil
 }
