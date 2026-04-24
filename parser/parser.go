@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"encoding/json"
+	"gopkg.in/yaml.v3"
 )
 
 /**
@@ -38,10 +39,10 @@ func Parser(path string)(map[string]any, error) {
 			return nil, fmt.Errorf("ошибка парсинга JSON файла %s: %w", path, err)
 		}
 		
-	// case ".yaml", ".yml":
-	// 	if err := yaml.Unmarshal(data, &result); err != nil {
-	// 		return nil, fmt.Errorf("ошибка парсинга YAML файла %s: %w", path, err)
-	// 	}
+	case ".yaml", ".yml":
+		if err := yaml.Unmarshal(data, &result); err != nil {
+			return nil, fmt.Errorf("ошибка парсинга YAML файла %s: %w", path, err)
+		}
 		
 	default:
 		return nil, fmt.Errorf("неподдерживаемый формат файла %s. Поддерживаемые форматы: .json, .yaml, .yml", ext)

@@ -5,6 +5,6 @@ code/gendiff.go:21.2,24.32 3 1
 code/gendiff.go:24.32,25.21 1 1
 code/gendiff.go:25.21,27.7 1 1
 code/gendiff.go:28.6,28.21 1 0
-code/gendiff.go:31.2,35.16 3 0
+code/gendiff.go:31.2,35.16 3 1
 code/gendiff.go:35.16,37.3 1 0
-code/gendiff.go:39.2,39.21 1 0
+code/gendiff.go:39.2,39.21 1 1
