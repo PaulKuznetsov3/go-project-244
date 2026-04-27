@@ -40,6 +40,15 @@ func CompareFiles(dataFile1, dataFile2 map[string]any )[]Node {
 			continue
 		}
 
+		if isMap(val1) && isMap(val2) {
+			result = append(result, Node{
+				Key:      key,
+				Children: CompareFiles(val1.(map[string]any), val2.(map[string]any)),
+				Type:     "nested",
+			})
+			continue
+		}
+
 		if !isEqual(val1, val2) {
 			result = append(result, Node{
 				Key:      key,
@@ -83,4 +92,10 @@ func getSortedKeys(file1, file2 map[string]any) []string {
 
 func isEqual(a, b any) bool {
 	return fmt.Sprintf("%#v", a) == fmt.Sprintf("%#v", b)
+}
+
+// isMap Проверяет является ли значение map
+func isMap(value any) bool {
+    _, ok := value.(map[string]any)
+    return ok
 }

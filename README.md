@@ -3,5 +3,9 @@
 
 ### comparing flat files .yaml
 [![asciicast](https://asciinema.org/a/0EzWqQFSxFhOboEs.svg)](https://asciinema.org/a/0EzWqQFSxFhOboEs)
+
 ### comparing flat files .json
 [![asciicast](https://asciinema.org/a/LyuqwQF9gNVei7bs.svg)](https://asciinema.org/a/LyuqwQF9gNVei7bs)
+
+### output in the format stylish
+[![asciicast](https://asciinema.org/a/NhA756mB9eSrxT9Z.svg)](https://asciinema.org/a/NhA756mB9eSrxT9Z)

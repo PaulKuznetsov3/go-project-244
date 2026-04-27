@@ -4,22 +4,27 @@ import (
 	"code/compareFiles"
 	"strings"
 	"fmt"
+	"sort"
 )
 
 var defaultIndent int = 4
 
-// MakeIndent создает отступ для текущего уровня
-func MakeIndent(depth, spaceCount int) string {
+// makeIndent создает отступ для текущего уровня
+func makeIndent(depth, spaceCount int) string {
 	return strings.Repeat(" ", depth*spaceCount-2)
 }
 
-// MakeBackIndent создает закрывающий отступ
-func MakeBackIndent(depth, spaceCount int) string {
-	return strings.Repeat(" ", depth*spaceCount)
+// makeBackIndent создает закрывающий отступ для вложенных объектов
+func makeBackIndent(depth, spaceCount int) string {
+	return strings.Repeat(" ", (depth - 1) * spaceCount)
 }
 
 // Stringify преобразует значение в строку
 func Stringify(value any, depth int) string {
+	if value == nil {
+		return "null"
+	}
+	
 	if !isMap(value) {
 		return fmt.Sprintf("%v", value)
 	}
@@ -29,18 +34,17 @@ func Stringify(value any, depth int) string {
 		return fmt.Sprintf("%v", value)
 	}
 
-	// Сортируем ключи для стабильного вывода
 	keys := getSortedKeysFromMap(valueMap)
 	
 	lines := make([]string, 0, len(keys))
+	indent := strings.Repeat(" ", depth*defaultIndent)
 	for _, key := range keys {
 		val := valueMap[key]
-		indent := MakeIndent(depth, defaultIndent)
-		lines = append(lines, fmt.Sprintf("%s  %s: %s", indent, key, Stringify(val, depth+1)))
+		lines = append(lines, fmt.Sprintf("%s%s: %s", indent, key, Stringify(val, depth+1)))
 	}
 	
 	result := strings.Join(lines, "\n")
-	backIndent := MakeBackIndent(depth-1, defaultIndent)
+	backIndent := makeBackIndent(depth, defaultIndent)
 	
 	return fmt.Sprintf("{\n%s\n%s}", result, backIndent)
 }
@@ -54,64 +58,41 @@ func isMap(value any) bool {
 // getSortedKeysFromMap возвращает отсортированные ключи из map
 func getSortedKeysFromMap(m map[string]any) []string {
 	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
+	for key := range m {
+		keys = append(keys, key)
 	}
 	
-	for i := 0; i < len(keys)-1; i++ {
-		for j := i + 1; j < len(keys); j++ {
-			if keys[i] > keys[j] {
-				keys[i], keys[j] = keys[j], keys[i]
-			}
-		}
-	}
+	sort.Strings(keys)
 	
 	return keys
 }
 
 // Stylish форматирует дерево различий в стиле stylish
 func Stylish(tree []comparefiles.Node) string {
-	iter := func(nodes []comparefiles.Node, depth int) string {
-		lines := make([]string, 0, len(nodes))
-		
+	var iter func(nodes []comparefiles.Node, depth int) string
+	iter = func (nodes []comparefiles.Node, depth int) string {
+
+		var builder strings.Builder
+		builder.WriteString("{\n")
 		for _, node := range nodes {
 			switch node.Type {
-			case "added":
-				indent := MakeIndent(depth, defaultIndent)
-				lines = append(lines, fmt.Sprintf("%s+ %s: %s", 
-					indent, node.Key, Stringify(node.NewValue, depth+1)))
-				
-			case "deleted":
-				indent := MakeIndent(depth, defaultIndent)
-				lines = append(lines, fmt.Sprintf("%s- %s: %s", 
-					indent, node.Key, Stringify(node.OldValue, depth+1)))
-				
 			case "nested":
-				indent := MakeIndent(depth, defaultIndent)
-				nestedContent := Stylish(node.Children)
-				nestedContent = nestedContent[1 : len(nestedContent)-1]
-				lines = append(lines, fmt.Sprintf("%s  %s: {\n%s\n%s", 
-					indent, node.Key, nestedContent, MakeBackIndent(depth, 4)))
-				
-			case "changed":
-				indent := MakeIndent(depth, defaultIndent)
-				lines = append(lines, fmt.Sprintf("%s- %s: %s", 
-					indent, node.Key, Stringify(node.OldValue, depth+1)))
-				lines = append(lines, fmt.Sprintf("%s+ %s: %s", 
-					indent, node.Key, Stringify(node.NewValue, depth+1)))
-				
+				childStr := iter(node.Children, depth+1)
+				builder.WriteString(fmt.Sprintf("%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, childStr))
 			case "unchanged":
-				indent := MakeIndent(depth, defaultIndent)
-				lines = append(lines, fmt.Sprintf("%s  %s: %s", 
-					indent, node.Key, Stringify(node.OldValue, depth+1)))
-				
-			default:
-				panic(fmt.Sprintf("unknown format: '%s'!", node.Type))
+				builder.WriteString(fmt.Sprintf("%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1)))
+			case "deleted":
+				builder.WriteString(fmt.Sprintf("%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1)))
+			case "added":
+				builder.WriteString(fmt.Sprintf("%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1)))
+			case "changed":
+				builder.WriteString(fmt.Sprintf("%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1)))
+				builder.WriteString(fmt.Sprintf("%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1)))
 			}
 		}
-		
-		return strings.Join(lines, "\n")
+		builder.WriteString(makeBackIndent(depth, defaultIndent) + "}")
+		return builder.String()
 	}
 	
-	return fmt.Sprintf("{\n%s\n}", iter(tree, 1))
+	return iter(tree, 1)
 }
