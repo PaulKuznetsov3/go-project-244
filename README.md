@@ -9,3 +9,6 @@
 
 ### output in the format stylish
 [![asciicast](https://asciinema.org/a/NhA756mB9eSrxT9Z.svg)](https://asciinema.org/a/NhA756mB9eSrxT9Z)
+
+### output in the format plain
+[![asciicast](https://asciinema.org/a/YsqOgm3CBrC871Op.svg)](https://asciinema.org/a/YsqOgm3CBrC871Op)

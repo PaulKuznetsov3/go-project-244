@@ -71,7 +71,6 @@ func getSortedKeysFromMap(m map[string]any) []string {
 func Stylish(tree []comparefiles.Node) string {
 	var iter func(nodes []comparefiles.Node, depth int) string
 	iter = func (nodes []comparefiles.Node, depth int) string {
-
 		var builder strings.Builder
 		builder.WriteString("{\n")
 		for _, node := range nodes {
