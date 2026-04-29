@@ -13,7 +13,7 @@ func GenDiff(filepath1, filepath2, format string) (string, error){
 	    return "", fmt.Errorf("file paths cannot be empty: %q, %q", filepath1, filepath2)
 	}
 
-	var defaultFormat string = "stylish"
+	var defaultFormat = "stylish"
 
 	if format == "" {
 		format = defaultFormat
