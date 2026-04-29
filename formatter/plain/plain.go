@@ -36,25 +36,29 @@ func getPath(valuePath, key string)string {
 
 // Plain форматирует дерево различий в стиле Plain
 func Plain(tree []comparefiles.Node) string {
-	var iter func(nodes []comparefiles.Node, path string) string
-	iter = func (nodes []comparefiles.Node, basePath string) string {
-		var builder strings.Builder
-		for _, node := range nodes {
-			path := getPath(basePath, node.Key)
-			switch node.Type {
-			case "nested":
-				childStr := iter(node.Children, path)
-				builder.WriteString(childStr)
-			case "deleted":
-				builder.WriteString(fmt.Sprintf("Property '%s' was removed\n", path))
-			case "added":
-				builder.WriteString(fmt.Sprintf("Property '%s' was added with value: %s\n",path, Stringify(node.NewValue)))
-			case "changed":
-				builder.WriteString(fmt.Sprintf("Property '%s' was updated. From %s to %s\n", path, Stringify(node.OldValue), Stringify(node.NewValue)))
-			}
-		}
-		return builder.String()
-	}
-	
-	return strings.TrimSpace(iter(tree, ""))
+    var iter func(nodes []comparefiles.Node, path string) string
+    iter = func(nodes []comparefiles.Node, basePath string) string {
+        var builder strings.Builder
+        for i, node := range nodes {
+            path := getPath(basePath, node.Key)
+            switch node.Type {
+            case "nested":
+                childStr := iter(node.Children, path)
+                builder.WriteString(childStr)
+            case "deleted":
+                fmt.Fprintf(&builder, "Property '%s' was removed", path)
+            case "added":
+                fmt.Fprintf(&builder, "Property '%s' was added with value: %s", path, Stringify(node.NewValue))
+            case "changed":
+                fmt.Fprintf(&builder, "Property '%s' was updated. From %s to %s", path, Stringify(node.OldValue), Stringify(node.NewValue))
+            }
+            
+            if i < len(nodes)-1 {
+                builder.WriteString("\n")
+            }
+        }
+        return builder.String()
+    }
+    
+    return iter(tree, "")
 }
