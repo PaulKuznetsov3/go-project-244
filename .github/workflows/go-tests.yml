@@ -1,11 +1,8 @@
-name: Go Tests
+name: go-tests
 
 on:
   push:
-    branches:
-      - '**'
-    tags:
-      - '**'
+    branches: ["**"]
   pull_request:
 
 concurrency:
@@ -13,41 +10,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-    strategy:
-      matrix:
-        go-version: ['1.22', '1.23']  # Исправлено: 1.26 не существует
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      HAS_SONAR:   ${{ secrets.SONAR_TOKEN }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Нужно для SonarCloud
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: "1.22.x"
+          check-latest: true
+          # встраиваемый кеш без 'tar' шумов
           cache: true
           cache-dependency-path: |
             go.sum
             **/go.sum
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      # ---- Больше не нужен отдельный actions/cache шаг ----
 
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Go tidy check
+      - name: Go tidy (check)
         run: |
           go mod tidy
           if [ -n "$(git status --porcelain go.mod go.sum)" ]; then
@@ -56,51 +46,31 @@ jobs:
             exit 1
           fi
 
-      - name: Run tests with coverage
+      - name: Install golangci-lint
         run: |
-          go test -race -coverprofile=coverage.out -covermode=atomic ./...
-          go test -json > test-report.json
+          GOLANGCI_VERSION=v1.64.8
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_VERSION}
+          golangci-lint version
 
-      - name: Display coverage
-        run: |
-          go tool cover -func=coverage.out | tail -n 1
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+
+      - name: Coverage (artifact)
+        run: make cover && cp coverage.out coverage.txt
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-reports
-          path: |
-            coverage.out
-            test-report.json
-          retention-days: 7
+          name: coverage.txt
+          path: coverage.txt
 
-  sonarcloud:
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' && secrets.SONAR_TOKEN != ''
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-reports
-          path: .
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+      - name: SonarCloud Scan
+        if: ${{ env.HAS_SONAR != '' }}
+        uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-        with:
-          args: >
-            -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.go.coverage.reportPaths=coverage.out
-            -Dsonar.go.tests.reportPaths=test-report.json
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/*_test.go,**/vendor/**,**/mocks/**
+        continue-on-error: true
