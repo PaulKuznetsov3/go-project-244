@@ -36,20 +36,15 @@ func getPath(valuePath, key string)string {
 
 // Plain форматирует дерево различий в стиле Plain
 func Plain(tree []comparefiles.Node) string {
-	var iter func(nodes []comparefiles.Node, path string) string
-	iter = func(nodes []comparefiles.Node, basePath string) string {
-		var builder strings.Builder
+	var builder strings.Builder
+	
+	var iter func(nodes []comparefiles.Node, path string)
+	iter = func(nodes []comparefiles.Node, basePath string) {
 		for i, node := range nodes {
 			path := getPath(basePath, node.Key)
 			switch node.Type {
 			case "nested":
-				childStr := iter(node.Children, path)
-				if childStr != "" {
-					builder.WriteString(childStr)
-					if i < len(nodes)-1 {
-						builder.WriteString("\n")
-					}
-				}
+				iter(node.Children, path)
 			case "deleted":
 				fmt.Fprintf(&builder, "Property '%s' was removed", path)
 				if i < len(nodes)-1 {
@@ -67,8 +62,8 @@ func Plain(tree []comparefiles.Node) string {
 				}
 			}
 		}
-		return builder.String()
 	}
 	
-	return iter(tree, "")
+	iter(tree, "")
+	return builder.String()
 }
