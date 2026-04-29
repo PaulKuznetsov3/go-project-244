@@ -36,29 +36,39 @@ func getPath(valuePath, key string)string {
 
 // Plain форматирует дерево различий в стиле Plain
 func Plain(tree []comparefiles.Node) string {
-    var iter func(nodes []comparefiles.Node, path string) string
-    iter = func(nodes []comparefiles.Node, basePath string) string {
-        var builder strings.Builder
-        for i, node := range nodes {
-            path := getPath(basePath, node.Key)
-            switch node.Type {
-            case "nested":
-                childStr := iter(node.Children, path)
-                builder.WriteString(childStr)
-            case "deleted":
-                fmt.Fprintf(&builder, "Property '%s' was removed", path)
-            case "added":
-                fmt.Fprintf(&builder, "Property '%s' was added with value: %s", path, Stringify(node.NewValue))
-            case "changed":
-                fmt.Fprintf(&builder, "Property '%s' was updated. From %s to %s", path, Stringify(node.OldValue), Stringify(node.NewValue))
-            }
-            
-            if i < len(nodes)-1 {
-                builder.WriteString("\n")
-            }
-        }
-        return builder.String()
-    }
-    
-    return iter(tree, "")
+	var iter func(nodes []comparefiles.Node, path string) string
+	iter = func(nodes []comparefiles.Node, basePath string) string {
+		var builder strings.Builder
+		for i, node := range nodes {
+			path := getPath(basePath, node.Key)
+			switch node.Type {
+			case "nested":
+				childStr := iter(node.Children, path)
+				if childStr != "" {
+					builder.WriteString(childStr)
+					if i < len(nodes)-1 {
+						builder.WriteString("\n")
+					}
+				}
+			case "deleted":
+				fmt.Fprintf(&builder, "Property '%s' was removed", path)
+				if i < len(nodes)-1 {
+					builder.WriteString("\n")
+				}
+			case "added":
+				fmt.Fprintf(&builder, "Property '%s' was added with value: %s", path, Stringify(node.NewValue))
+				if i < len(nodes)-1 {
+					builder.WriteString("\n")
+				}
+			case "changed":
+				fmt.Fprintf(&builder, "Property '%s' was updated. From %s to %s", path, Stringify(node.OldValue), Stringify(node.NewValue))
+				if i < len(nodes)-1 {
+					builder.WriteString("\n")
+				}
+			}
+		}
+		return builder.String()
+	}
+	
+	return iter(tree, "")
 }
