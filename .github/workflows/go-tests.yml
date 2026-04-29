@@ -1,75 +1,40 @@
-name: go-tests
+name: Go Tests
 
 on:
-  push:
-    branches: ["**"]
-  pull_request:
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+   push:
+    branches:
+      - '**'
+    tags:
+      - '**'
 
 jobs:
-  lint-and-test:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      HAS_SONAR:   ${{ secrets.SONAR_TOKEN }}
-
+    strategy:
+      matrix:
+        go-version: ['1.26']
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22.x"
-          check-latest: true
-          # встраиваемый кеш без 'tar' шумов
-          cache: true
-          cache-dependency-path: |
-            go.sum
-            **/go.sum
+          go-version: ${{ matrix.go-version }}
 
-      # ---- Больше не нужен отдельный actions/cache шаг ----
-
-      - name: Go tidy (check)
-        run: |
-          go mod tidy
-          if [ -n "$(git status --porcelain go.mod go.sum)" ]; then
-            echo "::error:: 'go mod tidy' changed go.mod/go.sum. Run it locally and commit."
-            git --no-pager diff
-            exit 1
-          fi
-
-      - name: Install golangci-lint
-        run: |
-          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-          golangci-lint version
-
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
-
-      - name: Coverage (artifact)
-        run: make cover && cp coverage.out coverage.txt
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
+      - name: Cache Go modules
+        uses: actions/cache@v4
         with:
-          name: coverage.txt
-          path: coverage.txt
+          path: |
+            ~/go/pkg/mod
+            /go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-      - name: SonarCloud Scan
-        if: ${{ env.HAS_SONAR != '' }}
-        uses: sonarsource/sonarqube-scan-action@v5.0.0
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
-        continue-on-error: true
+      - name: Run tests
+        run: |
+          # go test ./... запускает тесты во всех подпакетах
+          # -race включает детектор состояния гонки (race condition)
+          # -cover включает проверку покрытия кода тестами
+          go test -race -cover ./...

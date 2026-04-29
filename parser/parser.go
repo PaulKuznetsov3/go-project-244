@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Parser функция парсинга файла. 
+//Parser функция парсинга файла. 
 func Parser(path string) (map[string]any, error) {
 	var result map[string]any
 
@@ -31,12 +31,22 @@ func Parser(path string) (map[string]any, error) {
 	switch ext {
 	case ".json":
 		if err := json.Unmarshal(data, &result); err != nil {
-			return nil, fmt.Errorf("failed to parse JSON file %s: %w", path, err)
+			var arr []any
+			if err := json.Unmarshal(data, &arr); err != nil {
+				return nil, fmt.Errorf("failed to parse JSON file %s: %w", path, err)
+			}
+			result = make(map[string]any)
+			result["data"] = arr
 		}
 
 	case ".yaml", ".yml":
 		if err := yaml.Unmarshal(data, &result); err != nil {
-			return nil, fmt.Errorf("failed to parse YAML file %s: %w", path, err)
+			var arr []any
+			if err := yaml.Unmarshal(data, &arr); err != nil {
+				return nil, fmt.Errorf("failed to parse YAML file %s: %w", path, err)
+			}
+			result = make(map[string]any)
+			result["data"] = arr
 		}
 
 	default:
