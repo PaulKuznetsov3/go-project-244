@@ -54,8 +54,7 @@ func Plain(tree []comparefiles.Node) string {
 				lines = append(lines, fmt.Sprintf("Property '%s' was added with value: %s", path, Stringify(node.NewValue)))
 				
 			case "changed":
-				lines = append(lines, fmt.Sprintf("Property '%s' was updated. From %s to %s", path, Stringify(node.OldValue), Stringify(node.NewValue)))
-				
+				lines = append(lines, fmt.Sprintf("Property '%s' was updated. From %s to %s", path, Stringify(node.OldValue), Stringify(node.NewValue)))	
 			}
 		}
 	}

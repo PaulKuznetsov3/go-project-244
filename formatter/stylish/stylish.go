@@ -70,23 +70,23 @@ func getSortedKeysFromMap(m map[string]any) []string {
 // Stylish форматирует дерево различий в стиле stylish
 func Stylish(tree []comparefiles.Node) string {
 	var iter func(nodes []comparefiles.Node, depth int) string
-	iter = func (nodes []comparefiles.Node, depth int) string {
+	iter = func(nodes []comparefiles.Node, depth int) string {
 		var builder strings.Builder
 		builder.WriteString("{\n")
 		for _, node := range nodes {
 			switch node.Type {
 			case "nested":
 				childStr := iter(node.Children, depth+1)
-				builder.WriteString(fmt.Sprintf("%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, childStr))
+				fmt.Fprintf(&builder, "%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, childStr)
 			case "unchanged":
-				builder.WriteString(fmt.Sprintf("%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1)))
+				fmt.Fprintf(&builder, "%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1))
 			case "deleted":
-				builder.WriteString(fmt.Sprintf("%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1)))
+				fmt.Fprintf(&builder, "%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1))
 			case "added":
-				builder.WriteString(fmt.Sprintf("%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1)))
+				fmt.Fprintf(&builder, "%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1))
 			case "changed":
-				builder.WriteString(fmt.Sprintf("%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1)))
-				builder.WriteString(fmt.Sprintf("%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1)))
+				fmt.Fprintf(&builder, "%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1))
+				fmt.Fprintf(&builder, "%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1))
 			}
 		}
 		builder.WriteString(makeBackIndent(depth, defaultIndent) + "}")
