@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-/** Точка входа в приложение. */
+// Точка входа в приложение
 func main() {
     cmd := &cli.Command{
         Name:  "gendiff",
@@ -22,14 +22,10 @@ func main() {
             },
         },
         Action: func(ctx context.Context, cmd *cli.Command) error {
-            var defaultFormat string = "stylish"
-
             filepath1 := cmd.Args().Get(0)
             filepath2 := cmd.Args().Get(1)
             format := cmd.Args().Get(2)
-            if format == "" {
-                format = defaultFormat
-            }
+    
             result, err := code.GenDiff(filepath1, filepath2, format)
             if err != nil {
                 return err

@@ -13,7 +13,7 @@ type Node struct {
 	Children []Node
 }
 
-
+// CompareFiles сравнивает содержимое двух файлов
 func CompareFiles(dataFile1, dataFile2 map[string]any )[]Node {
 	sortKeys := getSortedKeys(dataFile1, dataFile2)
 	result := make([]Node, 0, len(sortKeys))
@@ -69,6 +69,7 @@ func CompareFiles(dataFile1, dataFile2 map[string]any )[]Node {
 	return result
 }
 
+// getSortedKeys возвращает отсортированный список всех уникальных ключей из двух map
 func getSortedKeys(file1, file2 map[string]any) []string {
 	keysMap := make(map[string]bool)
 	
@@ -90,6 +91,7 @@ func getSortedKeys(file1, file2 map[string]any) []string {
 	return keys
 }
 
+// isEqual сравнивает два значения
 func isEqual(a, b any) bool {
 	return fmt.Sprintf("%#v", a) == fmt.Sprintf("%#v", b)
 }

@@ -5,6 +5,7 @@ import (
 	"code/compareFiles"
 	"code/formatter/stylish"
     "code/formatter/plain"
+    "code/formatter/json"
 )
 
 func GetFormatter (compare []comparefiles.Node, format string) (string, error) {
@@ -13,8 +14,12 @@ func GetFormatter (compare []comparefiles.Node, format string) (string, error) {
         return stylish.Stylish(compare), nil
     case "plain":
         return plain.Plain(compare), nil
-   	// case "json":
-    //     return fmt.Sprintf("%.1f%s", currentSize/PB, "PB")
+   	case "json":
+        data, err := json.Json(compare)
+        if err != nil {
+            return "", err
+        }
+        return data, nil
     default:
         	return "", fmt.Errorf("unknown format: %s", format)
     }

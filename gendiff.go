@@ -7,17 +7,17 @@ import (
 	"code/compareFiles"
 )
 
-/**
-* Функция сравнивания файлов. 
-* 
-* filepath1, filepath1 Пути до файлов.
-* fopmat Формат вывода результата сравнения файлов.
-*/
+//Функция сравнивания файлов. 
 func GenDiff(filepath1, filepath2, format string) (string, error){
 	if filepath1 == "" || filepath2 == "" {
 	    return "", fmt.Errorf("file paths cannot be empty: %q, %q", filepath1, filepath2)
 	}
 
+	var defaultFormat string = "stylish"
+
+	if format == "" {
+		format = defaultFormat
+	}
 	data1, err1 := code.Parser(filepath1)
 	data2, err2 := code.Parser(filepath2)
 
