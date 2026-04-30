@@ -8,6 +8,7 @@ import (
     "code/formatter/json"
 )
 
+// GetFormatter возвращает дерево различий в заданном формате
 func GetFormatter (compare []comparefiles.Node, format string) (string, error) {
 	switch format {
     case "stylish":

@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//Parser функция парсинга файла. 
+//Parser функция парсинга файла
 func Parser(path string)(map[string]any, error) {
 	var result map[string]any
 

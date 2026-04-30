@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-var defaultIndent int = 4
+const defaultIndent = 4
 
 // makeIndent создает отступ для текущего уровня
 func makeIndent(depth, spaceCount int) string {

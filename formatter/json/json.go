@@ -8,7 +8,6 @@ import (
 
 // Json форматирует дерево различий в стиле json
 func Json(nodes []comparefiles.Node) (string, error) {
-	// Оборачиваем массив в структуру с ключом "diff"
 	wrapper := map[string]any{
 		"diff": nodes,
 	}
