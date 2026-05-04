@@ -1,10 +1,11 @@
+// Package stylish предоставляет функцию для вывода данных в формате stylish
 package stylish
 
 import (
-	"code/compareFiles"
-	"strings"
+	comparefiles "code/compareFiles"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 const defaultIndent = 4
@@ -16,7 +17,7 @@ func makeIndent(depth, spaceCount int) string {
 
 // makeBackIndent создает закрывающий отступ для вложенных объектов
 func makeBackIndent(depth, spaceCount int) string {
-	return strings.Repeat(" ", (depth - 1) * spaceCount)
+	return strings.Repeat(" ", (depth-1)*spaceCount)
 }
 
 // Stringify преобразует значение в строку
@@ -24,7 +25,7 @@ func Stringify(value any, depth int) string {
 	if value == nil {
 		return "null"
 	}
-	
+
 	if !isMap(value) {
 		return fmt.Sprintf("%v", value)
 	}
@@ -35,17 +36,17 @@ func Stringify(value any, depth int) string {
 	}
 
 	keys := getSortedKeysFromMap(valueMap)
-	
+
 	lines := make([]string, 0, len(keys))
 	indent := strings.Repeat(" ", depth*defaultIndent)
 	for _, key := range keys {
 		val := valueMap[key]
 		lines = append(lines, fmt.Sprintf("%s%s: %s", indent, key, Stringify(val, depth+1)))
 	}
-	
+
 	result := strings.Join(lines, "\n")
 	backIndent := makeBackIndent(depth, defaultIndent)
-	
+
 	return fmt.Sprintf("{\n%s\n%s}", result, backIndent)
 }
 
@@ -61,30 +62,30 @@ func getSortedKeysFromMap(m map[string]any) []string {
 	for key := range m {
 		keys = append(keys, key)
 	}
-	
+
 	sort.Strings(keys)
-	
+
 	return keys
 }
 
-// Stylish форматирует дерево различий в стиле stylish
-func Stylish(tree []comparefiles.Node) string {
+// FormatStylish форматирует дерево различий в стиле stylish
+func FormatStylish(tree []comparefiles.Node) string {
 	var iter func(nodes []comparefiles.Node, depth int) string
 	iter = func(nodes []comparefiles.Node, depth int) string {
 		var builder strings.Builder
 		builder.WriteString("{\n")
 		for _, node := range nodes {
 			switch node.Type {
-			case "nested":
+			case comparefiles.Nested:
 				childStr := iter(node.Children, depth+1)
 				fmt.Fprintf(&builder, "%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, childStr)
-			case "unchanged":
+			case comparefiles.Unchanged:
 				fmt.Fprintf(&builder, "%s  %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1))
-			case "deleted":
+			case comparefiles.Deleted:
 				fmt.Fprintf(&builder, "%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1))
-			case "added":
+			case comparefiles.Added:
 				fmt.Fprintf(&builder, "%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1))
-			case "changed":
+			case comparefiles.Changed:
 				fmt.Fprintf(&builder, "%s- %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.OldValue, depth+1))
 				fmt.Fprintf(&builder, "%s+ %s: %s\n", makeIndent(depth, defaultIndent), node.Key, Stringify(node.NewValue, depth+1))
 			}
@@ -92,6 +93,6 @@ func Stylish(tree []comparefiles.Node) string {
 		builder.WriteString(makeBackIndent(depth, defaultIndent) + "}")
 		return builder.String()
 	}
-	
+
 	return iter(tree, 1)
 }

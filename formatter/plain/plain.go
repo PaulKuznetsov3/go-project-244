@@ -1,9 +1,10 @@
+// Package plain предоставляет функцию для вывода данных в формате plain
 package plain
 
 import (
+	comparefiles "code/compareFiles"
 	"fmt"
 	"strings"
-	"code/compareFiles"
 )
 
 // isMap проверяет, является ли значение map
@@ -18,47 +19,47 @@ func Stringify(value any) string {
 		return "null"
 	}
 	if isMap(value) {
-    	return "[complex value]";
-  	}
-  	if _, ok := value.(string); ok {
+		return "[complex value]"
+	}
+	if _, ok := value.(string); ok {
 		return fmt.Sprintf("'%s'", value)
 	}
-  	return fmt.Sprintf("%v", value);
+	return fmt.Sprintf("%v", value)
 }
 
 // getPath формирует путь до значения
-func getPath(valuePath, key string)string {
+func getPath(valuePath, key string) string {
 	if valuePath == "" {
 		return key
 	}
 	return fmt.Sprintf("%s.%s", valuePath, key)
 }
 
-// Plain форматирует дерево различий в стиле Plain
-func Plain(tree []comparefiles.Node) string {
+// FormatPlain форматирует дерево различий в стиле Plain
+func FormatPlain(tree []comparefiles.Node) string {
 	var lines []string
-	
+
 	var iter func(nodes []comparefiles.Node, basePath string)
 	iter = func(nodes []comparefiles.Node, basePath string) {
 		for _, node := range nodes {
 			path := getPath(basePath, node.Key)
-			
+
 			switch node.Type {
-			case "nested":
+			case comparefiles.Nested:
 				iter(node.Children, path)
-				
-			case "deleted":
+
+			case comparefiles.Deleted:
 				lines = append(lines, fmt.Sprintf("Property '%s' was removed", path))
-				
-			case "added":
+
+			case comparefiles.Added:
 				lines = append(lines, fmt.Sprintf("Property '%s' was added with value: %s", path, Stringify(node.NewValue)))
-				
-			case "changed":
-				lines = append(lines, fmt.Sprintf("Property '%s' was updated. From %s to %s", path, Stringify(node.OldValue), Stringify(node.NewValue)))	
+
+			case comparefiles.Changed:
+				lines = append(lines, fmt.Sprintf("Property '%s' was updated. From %s to %s", path, Stringify(node.OldValue), Stringify(node.NewValue)))
 			}
 		}
 	}
-	
+
 	iter(tree, "")
 	return strings.Join(lines, "\n")
 }

@@ -7,3 +7,13 @@ run:
 
 linters:
   default: standard
+  enable:
+    - govet          
+    - staticcheck    
+    - errcheck      
+    - revive         
+    - gocritic      
+formatters:
+  enable:
+    - gofmt        
+    - goimports

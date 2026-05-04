@@ -1,27 +1,28 @@
+// Package formatter предоставляет функцию, которая озвращает дерево различий в заданном формате
 package formatter
 
 import (
-	"fmt"
-	"code/compareFiles"
+	comparefiles "code/compareFiles"
+	"code/formatter/jsonfmt"
+	"code/formatter/plain"
 	"code/formatter/stylish"
-    "code/formatter/plain"
-    "code/formatter/json"
+	"fmt"
 )
 
 // GetFormatter возвращает дерево различий в заданном формате
-func GetFormatter (compare []comparefiles.Node, format string) (string, error) {
+func GetFormatter(compare []comparefiles.Node, format string) (string, error) {
 	switch format {
-    case "stylish":
-        return stylish.Stylish(compare), nil
-    case "plain":
-        return plain.Plain(compare), nil
-   	case "json":
-        data, err := json.Json(compare)
-        if err != nil {
-            return "", err
-        }
-        return data, nil
-    default:
-        	return "", fmt.Errorf("unknown format: %s", format)
-    }
-};
+	case "stylish":
+		return stylish.FormatStylish(compare), nil
+	case "plain":
+		return plain.FormatPlain(compare), nil
+	case "json":
+		data, err := jsonfmt.FormatJSON(compare)
+		if err != nil {
+			return "", err
+		}
+		return data, nil
+	default:
+		return "", fmt.Errorf("unknown format: %s", format)
+	}
+}
