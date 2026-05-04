@@ -3,7 +3,7 @@ package formatter
 
 import (
 	comparefiles "code/compareFiles"
-	"code/formatter/json"
+	"code/formatter/jsonfmt"
 	"code/formatter/plain"
 	"code/formatter/stylish"
 	"fmt"
@@ -17,7 +17,7 @@ func GetFormatter(compare []comparefiles.Node, format string) (string, error) {
 	case "plain":
 		return plain.FormatPlain(compare), nil
 	case "json":
-		data, err := json.FormatJSON(compare)
+		data, err := jsonfmt.FormatJSON(compare)
 		if err != nil {
 			return "", err
 		}
