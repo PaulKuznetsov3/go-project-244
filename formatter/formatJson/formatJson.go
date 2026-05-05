@@ -1,5 +1,5 @@
 // Package jsonfmt предоставляет функцию для вывода данных в формате json
-package jsonfmt
+package formatjson
 
 import (
 	comparefiles "code/compareFiles"
