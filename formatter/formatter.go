@@ -3,7 +3,7 @@ package formatter
 
 import (
 	comparefiles "code/compareFiles"
-	"code/formatter/formatJson"
+	formatjson "code/formatter/formatJSON"
 	"code/formatter/plain"
 	"code/formatter/stylish"
 	"fmt"

@@ -1,4 +1,4 @@
-// Package jsonfmt предоставляет функцию для вывода данных в формате json
+// Package formatjson предоставляет функцию для вывода данных в формате json
 package formatjson
 
 import (
