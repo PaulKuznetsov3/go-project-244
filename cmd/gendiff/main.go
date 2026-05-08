@@ -17,7 +17,7 @@ func main() {
 		Name:  "gendiff",
 		Usage: "Compares two configuration files and shows a difference",
 		Flags: []cli.Flag{
-			&cli.BoolFlag{
+			&cli.StringFlag{
 				Name:    "format",
 				Aliases: []string{"f"},
 				Usage:   "output format (default: \"stylish\")",
@@ -25,10 +25,10 @@ func main() {
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			fpath1 := cmd.Args().Get(0)
-			path2 := cmd.Args().Get(1)
+			fpath2 := cmd.Args().Get(1)
 			format := cmd.String("format")
 
-			result, err := code.GenDiff(fpath1, path2, format)
+			result, err := code.GenDiff(fpath1, fpath2, format)
 			if err != nil {
 				return err
 			}
